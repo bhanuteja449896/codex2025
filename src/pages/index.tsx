@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Head from "next/head";
-import { BrowserWallet, Transaction, BlockfrostProvider } from "@meshsdk/core";
+import { BrowserWallet, Transaction, BlockfrostProvider, ForgeScript } from "@meshsdk/core";
 import { MeshBadge } from "@meshsdk/react";
 import Confetti from "react-confetti";
 
@@ -8,9 +8,9 @@ import Confetti from "react-confetti";
 interface Product {
   id: number;
   name: string;
-  price: number; // in ADA
+  price: number;
   image: string;
-  category: "watch" | "dress";
+  category: "watch" | "jewelry";
   description: string;
   seller: string;
 }
@@ -27,51 +27,60 @@ const SELLER_NAME = "Premium Marketplace";
 // Blockfrost configuration (testnet)
 const BLOCKFROST_API_KEY = process.env.NEXT_PUBLIC_BLOCKFROST_API_KEY || "preprodk8WqHyFkGJxnpQxkWOX9z7l3zGL7BF4H";
 
-// Sample products (5 items as requested)
+// Premium watches and jewelry collection
 const sampleProducts: Product[] = [
   {
     id: 1,
     name: "Luxury Gold Watch",
     price: 50, // Reduced prices for testnet
-    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' fill='%23FFD700'%3E%3Ccircle cx='150' cy='150' r='140' stroke='%23B8860B' stroke-width='10'/%3E%3Ccircle cx='150' cy='150' r='10' fill='%23000'/%3E%3Cline x1='150' y1='150' x2='150' y2='70' stroke='%23000' stroke-width='4'/%3E%3Cline x1='150' y1='150' x2='210' y2='150' stroke='%23000' stroke-width='2'/%3E%3Ctext x='150' y='280' text-anchor='middle' fill='%23B8860B' font-size='16'%3ELuxury Gold%3C/text%3E%3C/svg%3E",
+    image: "https://images.unsplash.com/photo-1547996160-81dfa63595aa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     category: "watch",
-    description: "Premium 18k gold plated watch with automatic movement",
+    description: "Exquisite 18k solid gold timepiece featuring Swiss-made automatic movement with 42-hour power reserve. Hand-assembled by master craftsmen with anti-reflective sapphire crystal and exhibition caseback. Limited edition with certificate of authenticity.",
     seller: SELLER_NAME
   },
   {
     id: 2,
-    name: "Elegant Evening Dress",
-    price: 30,
-    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' fill='%23800080'%3E%3Cpath d='M100 50 L200 50 L220 150 L200 350 L100 350 L80 150 Z' fill='%23800080'/%3E%3Ccircle cx='150' cy='60' r='20' fill='%23FFC0CB'/%3E%3Ctext x='150' y='380' text-anchor='middle' fill='%23800080' font-size='14'%3EEvening Dress%3C/text%3E%3C/svg%3E",
-    category: "dress",
-    description: "Stunning purple evening dress perfect for special occasions",
+    name: "Diamond Tennis Bracelet",
+    price: 75,
+    image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    category: "jewelry",
+    description: "Magnificent 5-carat VVS1 diamond tennis bracelet in platinum setting. Each stone is individually selected for perfect clarity and brilliance. Features secure invisible clasp and comes with GIA certification. A true investment piece for discerning collectors.",
     seller: SELLER_NAME
   },
   {
     id: 3,
-    name: "Sport Chronograph",
-    price: 35,
-    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' fill='%23000'%3E%3Ccircle cx='150' cy='150' r='140' stroke='%23333' stroke-width='10'/%3E%3Ccircle cx='150' cy='150' r='8' fill='%23FF0000'/%3E%3Cline x1='150' y1='150' x2='150' y2='80' stroke='%23FF0000' stroke-width='3'/%3E%3Cline x1='150' y1='150' x2='200' y2='150' stroke='%23FF0000' stroke-width='2'/%3E%3Ccircle cx='120' cy='100' r='20' fill='none' stroke='%23333' stroke-width='2'/%3E%3Ccircle cx='180' cy='100' r='20' fill='none' stroke='%23333' stroke-width='2'/%3E%3Ctext x='150' y='280' text-anchor='middle' fill='%23333' font-size='14'%3ESport Chrono%3C/text%3E%3C/svg%3E",
-    category: "watch",
-    description: "Professional sport chronograph with water resistance",
+    name: "Emerald Ring Set",
+    price: 60,
+    image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    category: "jewelry",
+    description: "Rare Colombian emerald collection featuring AAA-grade stones with exceptional color saturation. Set in 22k yellow gold with micro-pave diamond accents. Each emerald is oil-free and comes with Gübelin certification. Includes matching pendant and earrings.",
     seller: SELLER_NAME
   },
   {
     id: 4,
-    name: "Summer Floral Dress",
-    price: 20,
-    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' fill='%23FF69B4'%3E%3Cpath d='M110 50 L190 50 L200 150 L190 350 L110 350 L100 150 Z' fill='%23FF69B4'/%3E%3Ccircle cx='150' cy='60' r='15' fill='%23FFC0CB'/%3E%3Ccircle cx='130' cy='120' r='8' fill='%23FFFF00'/%3E%3Ccircle cx='170' cy='140' r='8' fill='%23FFFF00'/%3E%3Ccircle cx='140' cy='180' r='6' fill='%23FF0000'/%3E%3Ccircle cx='160' cy='200' r='6' fill='%23FF0000'/%3E%3Ctext x='150' y='380' text-anchor='middle' fill='%23FF69B4' font-size='14'%3EFloral Dress%3C/text%3E%3C/svg%3E",
-    category: "dress",
-    description: "Light and breezy summer dress with floral pattern",
+    name: "Vintage Leather Watch",
+    price: 25,
+    image: "https://images.unsplash.com/photo-1533139502658-0198f920d8e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    category: "watch",
+    description: "Heritage timepiece from 1960s featuring original mechanical movement completely restored by certified horologists. Hand-stitched Italian calfskin leather strap with vintage gold buckle. Comes with provenance documentation and original box from estate collection.",
     seller: SELLER_NAME
   },
   {
     id: 5,
-    name: "Classic Leather Watch",
-    price: 25,
-    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' fill='%238B4513'%3E%3Ccircle cx='150' cy='150' r='130' stroke='%23654321' stroke-width='8'/%3E%3Ccircle cx='150' cy='150' r='6' fill='%23000'/%3E%3Cline x1='150' y1='150' x2='150' y2='90' stroke='%23000' stroke-width='3'/%3E%3Cline x1='150' y1='150' x2='190' y2='150' stroke='%23000' stroke-width='2'/%3E%3Crect x='120' y='260' width='60' height='15' fill='%238B4513'/%3E%3Crect x='120' y='25' width='60' height='15' fill='%238B4513'/%3E%3Ctext x='150' y='290' text-anchor='middle' fill='%23654321' font-size='14'%3ELeather Classic%3C/text%3E%3C/svg%3E",
+    name: "Pearl Earrings",
+    price: 45,
+    image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    category: "jewelry",
+    description: "Lustrous South Sea pearls harvested from pristine Australian waters. Each 12mm pearl exhibits perfect spherical shape with mirror-like nacre quality. Set in platinum with diamond-studded posts. Comes with Mikimoto authentication and luxury presentation box.",
+    seller: SELLER_NAME
+  },
+  {
+    id: 6,
+    name: "Swiss Automatic Watch",
+    price: 85,
+    image: "https://images.unsplash.com/photo-1594534475808-b18fc33b045e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     category: "watch",
-    description: "Timeless leather strap watch with Roman numerals",
+    description: "Haute horlogerie masterpiece featuring in-house Swiss manufacture movement with 72-hour power reserve. Hand-engraved rotor visible through skeleton caseback. Rose gold case with Côtes de Genève finishing and blue steel hands. COSC chronometer certified.",
     seller: SELLER_NAME
   }
 ];
@@ -80,7 +89,10 @@ export default function Home() {
   const [wallet, setWallet] = useState<BrowserWallet | null>(null);
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [wishlist, setWishlist] = useState<Product[]>([]);
   const [showCart, setShowCart] = useState(false);
+  const [showWishlist, setShowWishlist] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'watch' | 'jewelry'>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
@@ -139,6 +151,29 @@ export default function Home() {
     console.log("💰 Cart total calculated:", total, "ADA for", cart.length, "unique items");
     return total;
   };
+
+  // Wishlist functions
+  const addToWishlist = (product: Product) => {
+    console.log("❤️ Adding to wishlist:", product.name);
+    if (!wishlist.find(item => item.id === product.id)) {
+      setWishlist(prev => [...prev, product]);
+    }
+  };
+
+  const removeFromWishlist = (productId: number) => {
+    console.log("💔 Removing from wishlist, ID:", productId);
+    setWishlist(prev => prev.filter(item => item.id !== productId));
+  };
+
+  const isInWishlist = (productId: number) => {
+    return wishlist.some(item => item.id === productId);
+  };
+
+  // Filter products based on category
+  const filteredProducts = sampleProducts.filter(product => {
+    if (categoryFilter === 'all') return true;
+    return product.category === categoryFilter;
+  });
 
   // Connect Wallet
   const connectWallet = async () => {
@@ -397,10 +432,79 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 text-gray-900">
       <Head>
-        <title>Premium Marketplace - Luxury Items with Cardano</title>
-        <meta name="description" content="Buy luxury watches and fashion with Cardano ADA payments" />
+        <title>✨ Luxury Market - Premium NFT Collection with Cardano</title>
+        <meta name="description" content="Discover exclusive luxury items with NFT certificates. Purchase premium watches and jewelry with secure Cardano ADA payments and receive blockchain-verified ownership certificates." />
+        <meta name="keywords" content="NFT, Cardano, Luxury, Blockchain, Premium, Marketplace" />
+        <link rel="icon" href="/favicon.ico" />
+        <style jsx global>{`
+          @keyframes fade-in-up {
+            from {
+              opacity: 0;
+              transform: translateY(30px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          
+          @keyframes float {
+            0%, 100% {
+              transform: translateY(0px);
+            }
+            50% {
+              transform: translateY(-20px);
+            }
+          }
+          
+          @keyframes shimmer {
+            0% {
+              background-position: -200% 0;
+            }
+            100% {
+              background-position: 200% 0;
+            }
+          }
+          
+          @keyframes glow {
+            0%, 100% {
+              box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+            }
+            50% {
+              box-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
+            }
+          }
+          
+          .animate-fade-in-up {
+            animation: fade-in-up 0.8s ease-out forwards;
+            opacity: 0;
+          }
+          
+          .animate-float {
+            animation: float 3s ease-in-out infinite;
+          }
+          
+          .animate-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+          }
+          
+          .animate-glow {
+            animation: glow 2s ease-in-out infinite;
+          }
+          
+          .hover-lift {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+          }
+          
+          .hover-lift:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+          }
+        `}</style>
       </Head>
 
       {/* Confetti Animation */}
@@ -409,103 +513,252 @@ export default function Home() {
           width={windowSize.width}
           height={windowSize.height}
           recycle={false}
-          numberOfPieces={500}
-          gravity={0.3}
+          numberOfPieces={800}
+          gravity={0.2}
+          colors={['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#FFB347', '#98FB98']}
         />
       )}
 
       {/* Header */}
-      <header className="bg-gray-800 shadow-lg">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-sky-400">🏪 Premium Marketplace</h1>
-            <p className="text-sm text-gray-400">by {SELLER_NAME}</p>
-          </div>
-          
-          <nav className="flex items-center space-x-4">
-            {/* Cart Button */}
-            <button
-              onClick={() => setShowCart(!showCart)}
-              className="bg-green-600 px-4 py-2 rounded relative hover:bg-green-700 transition-colors"
-            >
-              🛒 Cart ({cart.length})
-              {cart.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {cart.length}
-                </span>
-              )}
-            </button>
+      <header className="bg-white/90 backdrop-blur-lg shadow-2xl border-b border-gray-200/50 sticky top-0 z-40 animate-fade-in-up">
+        <div className="container mx-auto px-6 py-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div className="w-14 h-14 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 rounded-2xl flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-all duration-300 animate-float hover:animate-glow">
+                <span className="text-white text-2xl font-bold">💎</span>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
+                  Luxury Market
+                </h1>
+                <p className="text-sm text-gray-500 font-medium flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                  <span>Premium NFT Collection by {SELLER_NAME}</span>
+                </p>
+              </div>
+            </div>
             
-            {/* Wallet Connect */}
-            <button
-              onClick={connectWallet}
-              className="bg-sky-600 px-4 py-2 rounded hover:bg-sky-700 transition-colors"
-            >
-              {wallet ? "✅ Wallet Connected" : "� Connect Wallet"}
-            </button>
-          </nav>
+            <nav className="flex items-center space-x-3">
+              {/* Category Filters */}
+              <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-2xl p-1 hover-lift">
+                {(['all', 'watch', 'jewelry'] as const).map((category, index) => (
+                  <button
+                    key={category}
+                    onClick={() => setCategoryFilter(category)}
+                    className={`px-4 py-2 rounded-xl font-medium transition-all duration-300 hover:scale-105 ${
+                      categoryFilter === category
+                        ? 'bg-white text-purple-600 shadow-md animate-shimmer'
+                        : 'text-white/80 hover:text-white hover:bg-white/20'
+                    }`}
+                    style={{animationDelay: `${index * 0.1}s`}}
+                  >
+                    {category === 'all' ? 'All' : category === 'watch' ? 'Watches' : 'Jewelry'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Wishlist Button */}
+              <button
+                onClick={() => setShowWishlist(!showWishlist)}
+                className="group relative bg-gradient-to-r from-pink-500 to-rose-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 hover:from-pink-600 hover:to-rose-700"
+              >
+                <span className="flex items-center space-x-2">
+                  <span className="text-lg">❤️</span>
+                  <span>Wishlist</span>
+                  <span className="bg-white/20 px-2 py-1 rounded-full text-xs font-bold">{wishlist.length}</span>
+                </span>
+                {wishlist.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-bounce font-bold shadow-lg">
+                    {wishlist.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Cart Button */}
+              <button
+                onClick={() => setShowCart(!showCart)}
+                className="group relative bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 hover:from-emerald-600 hover:to-teal-700"
+              >
+                <span className="flex items-center space-x-2">
+                  <span className="text-lg">🛒</span>
+                  <span>Cart</span>
+                  <span className="bg-white/20 px-2 py-1 rounded-full text-xs font-bold">{cart.length}</span>
+                </span>
+                {cart.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-bounce font-bold shadow-lg">
+                    {cart.length}
+                  </span>
+                )}
+              </button>
+              
+              {/* Wallet Connect */}
+              <button
+                onClick={connectWallet}
+                className={`px-6 py-3 rounded-2xl font-semibold shadow-lg transform hover:scale-105 transition-all duration-300 ${
+                  wallet 
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700' 
+                    : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700'
+                }`}
+              >
+                <span className="flex items-center space-x-2">
+                  <span className="text-lg">{wallet ? "✅" : "🔗"}</span>
+                  <span>{wallet ? "Connected" : "Connect Wallet"}</span>
+                </span>
+              </button>
+            </nav>
+          </div>
         </div>
 
         {/* Seller Info Bar */}
-        <div className="bg-sky-900 px-4 py-2">
-          <div className="container mx-auto flex justify-between items-center text-sm">
-            <span>💳 Payments go directly to: <code className="bg-gray-700 px-2 py-1 rounded text-xs">{SELLER_ADDRESS.slice(0, 20)}...</code></span>
-            <span>🌐 Testnet Network</span>
+        <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm border-t border-gray-200/50">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center text-sm space-y-2 sm:space-y-0">
+              <div className="flex items-center space-x-3">
+                <span className="text-blue-600 font-semibold flex items-center space-x-2">
+                  <span className="text-lg">💳</span>
+                  <span>Secure Payments to:</span>
+                </span>
+                <code className="bg-white/70 backdrop-blur-sm px-3 py-1.5 rounded-lg text-xs font-mono border border-blue-200 text-blue-800 shadow-sm">
+                  {SELLER_ADDRESS.slice(0, 20)}...{SELLER_ADDRESS.slice(-8)}
+                </code>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                <span className="text-emerald-600 font-semibold flex items-center space-x-1">
+                  <span>🌐</span>
+                  <span>Cardano Testnet</span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-violet-600/10 via-purple-600/10 to-fuchsia-600/10 animate-pulse"></div>
+        {/* Floating Elements */}
+        <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-violet-400 to-purple-400 rounded-full opacity-20 animate-bounce" style={{animationDelay: '0s'}}></div>
+        <div className="absolute top-40 right-20 w-16 h-16 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full opacity-20 animate-bounce" style={{animationDelay: '1s'}}></div>
+        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full opacity-20 animate-bounce" style={{animationDelay: '2s'}}></div>
+        
+        <div className="container mx-auto px-6 py-16 relative">
+          <div className="text-center max-w-4xl mx-auto">
+            <h2 className="text-6xl sm:text-7xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent mb-6 leading-tight animate-fade-in-up">
+              Discover Premium
+              <span className="block animate-fade-in-up" style={{animationDelay: '0.2s'}}>Luxury NFTs</span>
+            </h2>
+            <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto animate-fade-in-up" style={{animationDelay: '0.4s'}}>
+              Own unique, blockchain-verified luxury items. Each purchase includes both premium products and exclusive NFT certificates of authenticity powered by Cardano.
+            </p>
+            <div className="flex flex-wrap justify-center gap-8 text-sm animate-fade-in-up" style={{animationDelay: '0.6s'}}>
+              <div className="flex items-center space-x-3 bg-white/60 backdrop-blur-sm px-4 py-3 rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 hover:bg-white/80">
+                <span className="text-3xl animate-pulse">🎨</span>
+                <span className="font-semibold text-gray-700">Luxury Collection</span>
+              </div>
+              <div className="flex items-center space-x-3 bg-white/60 backdrop-blur-sm px-4 py-3 rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 hover:bg-white/80">
+                <span className="text-3xl animate-pulse">🔒</span>
+                <span className="font-semibold text-gray-700">Blockchain Verified</span>
+              </div>
+              <div className="flex items-center space-x-3 bg-white/60 backdrop-blur-sm px-4 py-3 rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 hover:bg-white/80">
+                <span className="text-3xl animate-pulse">💎</span>
+                <span className="font-semibold text-gray-700">Exclusive Collection</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <main className="container mx-auto px-6 py-12">
         {/* Wallet Address Display */}
         {walletAddress && (
-          <div className="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-600">
-            <h3 className="text-sm font-semibold text-sky-400">Connected Address:</h3>
-            <p className="text-xs text-gray-300 break-all font-mono">{walletAddress}</p>
+          <div className="mb-8 p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-lg">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
+              <h3 className="text-lg font-semibold text-gray-800">Wallet Connected</h3>
+            </div>
+            <p className="text-sm text-gray-600 font-mono bg-gray-50/70 backdrop-blur-sm p-4 rounded-xl border border-gray-200 break-all">
+              {walletAddress}
+            </p>
           </div>
         )}
 
         {/* Shopping Cart Modal */}
         {showCart && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Shopping Cart</h2>
-                <button onClick={() => setShowCart(false)} className="text-gray-400 hover:text-white">✕</button>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white/95 backdrop-blur-lg rounded-3xl p-8 max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl border border-white/20">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                    <span className="text-white text-xl">🛒</span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-800">Shopping Cart</h2>
+                </div>
+                <button 
+                  onClick={() => setShowCart(false)} 
+                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold p-2 hover:bg-gray-100 rounded-2xl transition-all duration-200"
+                >
+                  ✕
+                </button>
               </div>
               
               {cart.length === 0 ? (
-                <p className="text-gray-400">Your cart is empty</p>
+                <div className="text-center py-12">
+                  <div className="text-8xl mb-4">🛒</div>
+                  <p className="text-gray-500 text-lg">Your cart is empty</p>
+                  <p className="text-gray-400 text-sm mt-2">Add some luxury items to get started!</p>
+                </div>
               ) : (
                 <>
-                  {cart.map(item => (
-                    <div key={item.id} className="flex items-center justify-between mb-3 p-3 bg-gray-700 rounded">
-                      <div>
-                        <h4 className="font-semibold">{item.name}</h4>
-                        <p className="text-sm text-gray-400">Qty: {item.quantity} × {item.price} ADA</p>
+                  <div className="space-y-4 mb-6 max-h-60 overflow-y-auto">
+                    {cart.map(item => (
+                      <div key={item.id} className="flex items-center space-x-4 p-4 bg-gray-50/70 backdrop-blur-sm rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-200">
+                        <img src={item.image} alt={item.name} className="w-16 h-16 rounded-xl object-cover shadow-sm" />
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-800">{item.name}</h4>
+                          <p className="text-sm text-gray-500">Qty: {item.quantity} × ₳{item.price}</p>
+                          <p className="text-sm font-bold text-emerald-600">₳{item.quantity * item.price}</p>
+                        </div>
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="text-red-400 hover:text-red-600 p-3 hover:bg-red-50 rounded-xl transition-all duration-200"
+                        >
+                          🗑️
+                        </button>
                       </div>
-                      <button
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                   
-                  <div className="border-t border-gray-600 pt-4 mt-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="font-bold">Total: {getTotalPrice()} ADA</span>
+                  <div className="border-t border-gray-200 pt-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <span className="text-2xl font-bold text-gray-800">Total</span>
+                      <span className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                        ₳{getTotalPrice()}
+                      </span>
                     </div>
                     <button
                       onClick={processPurchase}
                       disabled={!wallet || isLoading}
-                      className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-4 py-2 rounded font-semibold transition-colors"
+                      className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-4 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg disabled:transform-none disabled:hover:scale-100"
                     >
-                      {isLoading ? "Processing Payment..." : wallet ? `💳 Pay ${getTotalPrice()} ADA` : "Connect Wallet to Pay"}
+                      {isLoading ? (
+                        <span className="flex items-center justify-center space-x-2">
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <span>Processing Payment...</span>
+                        </span>
+                      ) : wallet ? (
+                        <span className="flex items-center justify-center space-x-2">
+                          <span className="text-lg">💳</span>
+                          <span>Pay ₳{getTotalPrice()} & Mint NFTs</span>
+                        </span>
+                      ) : (
+                        "Connect Wallet to Pay"
+                      )}
                     </button>
                     {wallet && (
-                      <p className="text-xs text-gray-400 mt-2 text-center">
-                        Payment will be sent to seller's Cardano address
+                      <p className="text-xs text-gray-500 mt-4 text-center leading-relaxed">
+                        Payment will be sent to seller's Cardano address<br/>
+                        + NFT certificates will be minted to your wallet
                       </p>
                     )}
                   </div>
@@ -515,68 +768,189 @@ export default function Home() {
           </div>
         )}
 
+        {/* Wishlist Modal */}
+        {showWishlist && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white/95 backdrop-blur-lg rounded-3xl p-8 max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl border border-white/20">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-rose-600 rounded-2xl flex items-center justify-center">
+                    <span className="text-white text-xl">❤️</span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-800">My Wishlist</h2>
+                </div>
+                <button 
+                  onClick={() => setShowWishlist(false)} 
+                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold p-2 hover:bg-gray-100 rounded-2xl transition-all duration-200"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              {wishlist.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-8xl mb-4">💔</div>
+                  <p className="text-gray-500 text-lg">Your wishlist is empty</p>
+                  <p className="text-gray-400 text-sm mt-2">Add items you love to save them for later!</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {wishlist.map(item => (
+                    <div key={item.id} className="flex items-center space-x-4 p-4 bg-gray-50/70 backdrop-blur-sm rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-200">
+                      <img src={item.image} alt={item.name} className="w-16 h-16 rounded-xl object-cover shadow-sm" />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-800">{item.name}</h4>
+                        <p className="text-sm text-gray-500">{item.category === 'watch' ? '⌚ Watch' : '💎 Jewelry'}</p>
+                        <p className="text-sm font-bold text-emerald-600">₳{item.price}</p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => addToCart(item)}
+                          className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-3 py-2 rounded-xl text-sm font-medium hover:from-emerald-600 hover:to-teal-700 transition-all duration-200"
+                        >
+                          🛒 Add to Cart
+                        </button>
+                        <button
+                          onClick={() => removeFromWishlist(item.id)}
+                          className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-xl transition-all duration-200"
+                        >
+                          💔
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Product Catalog */}
-        <div>
-          <h2 className="text-3xl font-bold mb-6 text-center">Premium Collection</h2>
-          <p className="text-center text-gray-400 mb-8">Luxury watches and fashion items available for purchase with Cardano ADA</p>
+        <section className="mb-16">
+          <div className="text-center mb-12 animate-fade-in-up">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent mb-4 hover:scale-105 transition-transform duration-300">
+              Premium Collection
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+              Exclusive luxury items with blockchain-verified NFT certificates. Each purchase is a step into the future of digital ownership.
+            </p>
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sampleProducts.map(product => (
-              <div key={product.id} className="bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:scale-105 transition-all duration-300 border border-gray-700 hover:border-sky-500">
-                <img src={product.image} alt={product.name} className="w-full h-48 object-cover" />
-                <div className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-lg">{product.name}</h3>
-                    <span className={`px-2 py-1 rounded text-sm font-semibold ${
-                      product.category === 'watch' ? 'bg-blue-600' : 'bg-pink-600'
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredProducts.map((product, index) => (
+              <div 
+                key={product.id} 
+                className="group bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-500 border border-white/50 hover:border-violet-200 transform hover:-translate-y-4 hover:scale-105 animate-fade-in-up hover-lift"
+                style={{animationDelay: `${index * 0.1}s`}}
+              >
+                <div className="relative overflow-hidden">
+                  <img src={product.image} alt={product.name} className="w-full h-64 object-cover group-hover:scale-125 transition-transform duration-700 group-hover:rotate-1" />
+                  <div className="absolute top-4 right-4">
+                    <span className={`px-3 py-1.5 rounded-2xl text-sm font-bold text-white shadow-lg backdrop-blur-sm ${
+                      product.category === 'watch' 
+                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600' 
+                        : 'bg-gradient-to-r from-pink-500 to-purple-600'
                     }`}>
-                      {product.category === 'watch' ? '⌚ Watch' : '👗 Dress'}
+                      {product.category === 'watch' ? '⌚ Watch' : '� Jewelry'}
                     </span>
                   </div>
-                  <p className="text-gray-400 text-sm mb-3">{product.description}</p>
-                  <p className="text-xs text-gray-500 mb-3">🏪 Sold by: {product.seller}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-green-400">₳{product.price}</span>
+                  <div className="absolute top-4 left-4">
                     <button
-                      onClick={() => addToCart(product)}
-                      className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-sm font-semibold transition-colors duration-200 hover:scale-105"
+                      onClick={() => isInWishlist(product.id) ? removeFromWishlist(product.id) : addToWishlist(product)}
+                      className={`p-2 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 ${
+                        isInWishlist(product.id)
+                          ? 'bg-red-500 text-white'
+                          : 'bg-white/80 text-gray-600 hover:bg-red-500 hover:text-white'
+                      }`}
                     >
-                      🛒 Add to Cart
+                      <span className="text-lg">❤️</span>
                     </button>
                   </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+                
+                <div className="p-6">
+                  <div className="mb-4">
+                    <h3 className="font-bold text-xl text-gray-800 mb-2 group-hover:text-violet-600 transition-colors duration-300">{product.name}</h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">{product.description}</p>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-2 text-xs text-gray-500">
+                      <span className="text-lg">🏪</span>
+                      <span className="font-medium">{product.seller}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent">
+                        ₳{product.price}
+                      </div>
+                      <p className="text-xs text-gray-500 font-medium">+ NFT Certificate</p>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => addToCart(product)}
+                    className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white px-6 py-3 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg group-hover:shadow-xl hover:animate-glow active:scale-95"
+                  >
+                    <span className="flex items-center justify-center space-x-2">
+                      <span className="text-lg animate-bounce">🛒</span>
+                      <span>Add to Cart</span>
+                    </span>
+                  </button>
                 </div>
               </div>
             ))}
           </div>
-          
-          {/* Info Section */}
-          <div className="mt-12 bg-gray-800 rounded-lg p-6 border border-gray-700">
-            <h3 className="text-xl font-bold mb-4 text-sky-400">🔒 Secure Payments with Cardano</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div className="text-center">
-                <div className="text-2xl mb-2">🏦</div>
-                <h4 className="font-semibold mb-1">Blockchain Security</h4>
-                <p className="text-gray-400">All transactions secured by Cardano blockchain</p>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl mb-2">💸</div>
-                <h4 className="font-semibold mb-1">Direct Payments</h4>
-                <p className="text-gray-400">Funds go directly to seller's wallet</p>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl mb-2">🌍</div>
-                <h4 className="font-semibold mb-1">Global Access</h4>
-                <p className="text-gray-400">Shop from anywhere with ADA</p>
-              </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/50 mb-16 hover-lift animate-fade-in-up">
+          <h3 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
+            Why Choose Our Marketplace?
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center p-6 rounded-2xl bg-gradient-to-br from-blue-50/80 to-indigo-50/80 border border-blue-200/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300 hover-lift animate-fade-in-up group" style={{animationDelay: '0.1s'}}>
+              <div className="text-5xl mb-4 animate-float group-hover:animate-bounce">🔒</div>
+              <h4 className="font-bold text-xl mb-3 text-gray-800 group-hover:text-blue-600 transition-colors duration-300">Blockchain Security</h4>
+              <p className="text-gray-600 leading-relaxed">All transactions secured by Cardano's proof-of-stake blockchain technology with mathematical certainty</p>
+            </div>
+            <div className="text-center p-6 rounded-2xl bg-gradient-to-br from-emerald-50/80 to-green-50/80 border border-emerald-200/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300 hover-lift animate-fade-in-up group" style={{animationDelay: '0.2s'}}>
+              <div className="text-5xl mb-4 animate-float group-hover:animate-bounce" style={{animationDelay: '1s'}}>💸</div>
+              <h4 className="font-bold text-xl mb-3 text-gray-800 group-hover:text-emerald-600 transition-colors duration-300">Direct Payments</h4>
+              <p className="text-gray-600 leading-relaxed">Funds go directly to seller's wallet with no intermediaries, ensuring fast and secure transactions</p>
+            </div>
+            <div className="text-center p-6 rounded-2xl bg-gradient-to-br from-purple-50/80 to-pink-50/80 border border-purple-200/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300 hover-lift animate-fade-in-up group" style={{animationDelay: '0.3s'}}>
+              <div className="text-5xl mb-4 animate-float group-hover:animate-bounce" style={{animationDelay: '2s'}}>🌍</div>
+              <h4 className="font-bold text-xl mb-3 text-gray-800 group-hover:text-purple-600 transition-colors duration-300">NFT Ownership</h4>
+              <p className="text-gray-600 leading-relaxed">Receive unique NFT certificates proving authentic ownership stored permanently on the blockchain</p>
             </div>
           </div>
-        </div>
+        </section>
       </main>
 
-      <footer className="bg-gray-800 py-6 mt-12">
-        <div className="container mx-auto px-4 text-center">
-          <MeshBadge isDark={true} />
-          <p className="text-gray-400 mt-2">Powered by Cardano & MeshSDK</p>
+      {/* Footer */}
+      <footer className="bg-white/80 backdrop-blur-sm border-t border-gray-200 py-12 animate-fade-in-up"  style={{animationDelay: '0.5s'}}>
+        <div className="container mx-auto px-6 text-center">
+          <div className="mb-6">
+            <div className="flex justify-center items-center space-x-4 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-r from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center animate-float hover:animate-glow">
+                <span className="text-white text-xl font-bold">💎</span>
+              </div>
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
+                Luxury Market
+              </h3>
+            </div>
+            <MeshBadge isDark={false} />
+          </div>
+          <div className="space-y-2">
+            <p className="text-gray-600 font-medium">Powered by Cardano & MeshSDK</p>
+            <p className="text-sm text-gray-500">
+              Testnet Environment • All transactions are for demonstration purposes
+            </p>
+            <p className="text-xs text-gray-400">
+              Built with ❤️ for the Cardano ecosystem
+            </p>
+          </div>
         </div>
       </footer>
     </div>
